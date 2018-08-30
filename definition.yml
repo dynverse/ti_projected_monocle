@@ -1,6 +1,6 @@
 id: projected_monocle
-docker_repository: dynverse/dynmethods:projected_monocle
-container_url: https://github.com/dynverse/dynmethods/tree/master/containers/projected_monocle
+docker_repository: dynverse/ti_projected_monocle
+container_url: https://github.com/dynverse/ti_projected_monocle
 name: Projected Monocle
 type: algorithm_test
 platform: R
