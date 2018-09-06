@@ -1,5 +1,6 @@
 id: projected_monocle
 docker_repository: dynverse/ti_projected_monocle
+singularity_collection: 1566
 container_url: https://github.com/dynverse/ti_projected_monocle
 name: Projected Monocle
 type: algorithm_test
