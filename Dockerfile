@@ -1,8 +1,8 @@
 FROM dynverse/dynwrap:bioc
 
-LABEL version 0.1.3
-
 RUN R -e 'devtools::install_cran("monocle")'
+
+LABEL version 0.1.3
 
 ADD . /code
 
