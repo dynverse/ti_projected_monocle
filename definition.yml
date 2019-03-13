@@ -1,64 +1,69 @@
-id: projected_monocle
-docker_repository: dynverse/ti_projected_monocle
-singularity_collection: 1566
-container_url: https://github.com/dynverse/ti_projected_monocle
-name: Projected Monocle
-source: adaptation
-implementation_id: monocle
-platform: R
-trajectory_types:
-- linear
-- bifurcation
-- convergence
-- multifurcation
-- binary_tree
-- tree
-topology_inference: free
-code_url: https://github.com/cole-trapnell-lab/monocle-release
+method:
+  id: projected_monocle
+  name: Projected Monocle
+  tool_id: monocle
+  source: adaptation
+  platform: R
+  url: https://github.com/cole-trapnell-lab/monocle-release
+
+container:
+  url: https://github.com/dynverse/ti_projected_monocle
+  docker: dynverse/ti_projected_monocle
+
+wrapper:
+  type: dimred_projection
+  topology_inference: free
+  trajectory_types:
+  - linear
+  - bifurcation
+  - convergence
+  - multifurcation
+  - binary_tree
+  - tree
+  example: /code/example.R
+  input_required:
+  - counts
+
+
 parameters:
-  reduction_method:
-    type: discrete
+  - id: reduction_method
+    type: character
     default: DDRTree
     values:
     - DDRTree
     description: A character string specifying the algorithm to use for dimensionality
       reduction.
-  max_components:
+  - id: max_components
     type: integer
     default: 2
-    upper: 20
-    lower: 2
+    distribution:
+      type: uniform
+      upper: 20
+      lower: 2
     description: the dimensionality of the reduced space
-  norm_method:
-    type: discrete
+  - id: norm_method
+    type: character
     default: vstExprs
     values:
     - vstExprs
     - log
     - none
     description: Determines how to transform expression values prior to reducing dimensionality
-  auto_param_selection:
+  - id: auto_param_selection
     type: logical
     default: yes
     description: when this argument is set to TRUE (default), it will automatically
       calculate the proper value for the ncenter (number of centroids) parameters
       which will be passed into DDRTree call.
-  filter_features:
+  - id: filter_features
     type: logical
     default: yes
     description: whether to include monocle feature filtering
-  filter_features_mean_expression:
+  - id: filter_features_mean_expression
     type: numeric
     default: 0.1
-    lower: 0
-    upper: 10
+    distribution:
+      type: uniform
+      lower: 0
+      upper: 10
     description: minimal mean feature expression, only used when `filter_features` is set to TRUE
-input:
-  format: rds
-  required: counts
-output:
-  format: rds
-  outputs:
-  - dimred_projection
-  - timings
-wrapper_type: dimred_projection

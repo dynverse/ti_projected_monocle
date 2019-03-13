@@ -1,3 +1,7 @@
+#!/usr/local/bin/Rscript
+
+task <- dyncli::main()
+
 library(jsonlite)
 library(readr)
 library(dplyr)
@@ -9,19 +13,11 @@ library(dynwrap)
 #   ____________________________________________________________________________
 #   Load data                                                               ####
 
-data <- read_rds("/ti/input/data.rds")
-params <- jsonlite::read_json("/ti/input/params.json")
+params <- task$params
+counts <- as.matrix(task$counts)
 
-#' @examples
-#' data <- dyntoy::generate_dataset(id = "test", num_cells = 299, num_features = 300, model = "linear") %>% c(., .$prior_information)
-#' params <- yaml::read_yaml("containers/projected_monocle/definition.yml")$parameters %>%
-#'   {.[names(.) != "forbidden"]} %>%
-#'   map(~ .$default)
-
-counts <- data$counts
 #   ____________________________________________________________________________
 #   Infer trajectory                                                        ####
-
 
 # just in case
 if (is.factor(params$norm_method)) {
@@ -105,4 +101,12 @@ output <- lst(
 #   ____________________________________________________________________________
 #   Save output                                                             ####
 
-write_rds(output, "/ti/output/output.rds")
+output <- dynwrap::wrap_data(cell_ids = cell_ids) %>%
+  dynwrap::add_dimred_projection(
+    milestone_network = milestone_network,
+    dimred = dimred,
+    dimred_milestones = dimred_milestones
+  ) %>%
+  dynwrap::add_timings(checkpoints)
+
+dyncli::write_output(output, task$output)
