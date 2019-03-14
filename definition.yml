@@ -20,10 +20,7 @@ wrapper:
   - multifurcation
   - binary_tree
   - tree
-  example: /code/example.R
-  input_required:
-  - counts
-
+  input_required: counts
 
 parameters:
   - id: reduction_method
