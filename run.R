@@ -1,31 +1,25 @@
-library(jsonlite)
-library(readr)
-library(dplyr)
-library(purrr)
+#!/usr/local/bin/Rscript
 
-library(monocle)
-library(dynwrap)
+task <- dyncli::main()
+
+library(dplyr, warn.conflicts = FALSE)
+library(purrr, warn.conflicts = FALSE)
+
+library(monocle, warn.conflicts = FALSE)
+library(dynwrap, warn.conflicts = FALSE)
 
 #   ____________________________________________________________________________
 #   Load data                                                               ####
 
-data <- read_rds("/ti/input/data.rds")
-params <- jsonlite::read_json("/ti/input/params.json")
+parameters <- task$parameters
+counts <- as.matrix(task$counts)
 
-#' @examples
-#' data <- dyntoy::generate_dataset(id = "test", num_cells = 299, num_features = 300, model = "linear") %>% c(., .$prior_information)
-#' params <- yaml::read_yaml("containers/projected_monocle/definition.yml")$parameters %>%
-#'   {.[names(.) != "forbidden"]} %>%
-#'   map(~ .$default)
-
-counts <- data$counts
 #   ____________________________________________________________________________
 #   Infer trajectory                                                        ####
 
-
 # just in case
-if (is.factor(params$norm_method)) {
-  params$norm_method <- as.character(params$norm_method)
+if (is.factor(parameters$norm_method)) {
+  parameters$norm_method <- as.character(parameters$norm_method)
 }
 
 # TIMING: done with preproc
@@ -41,9 +35,9 @@ cds <- BiocGenerics::estimateSizeFactors(cds)
 cds <- BiocGenerics::estimateDispersions(cds)
 
 # filter features if requested
-if (params$filter_features) {
+if (parameters$filter_features) {
   disp_table <- dispersionTable(cds)
-  ordering_genes <- subset(disp_table, mean_expression >= params$filter_features_mean_expression)
+  ordering_genes <- subset(disp_table, mean_expression >= parameters$filter_features_mean_expression)
   cds <- setOrderingFilter(cds, ordering_genes)
 
   print(nrow(ordering_genes))
@@ -52,16 +46,16 @@ if (params$filter_features) {
 # if low # cells or features -> https://github.com/cole-trapnell-lab/monocle-release/issues/26
 # this avoids the error "initial centers are not distinct."
 if (ncol(counts) < 500 || nrow(counts) < 500) {
-  params$auto_param_selection <- FALSE
+  parameters$auto_param_selection <- FALSE
 }
 
 # reduce the dimensionality
 cds <- monocle::reduceDimension(
   cds,
-  max_components = params$max_components,
-  reduction_method = params$reduction_method,
-  norm_method = params$norm_method,
-  auto_param_selection = params$auto_param_selection
+  max_components = parameters$max_components,
+  reduction_method = parameters$reduction_method,
+  norm_method = parameters$norm_method,
+  auto_param_selection = parameters$auto_param_selection
 )
 
 # order the cells
@@ -105,4 +99,12 @@ output <- lst(
 #   ____________________________________________________________________________
 #   Save output                                                             ####
 
-write_rds(output, "/ti/output/output.rds")
+output <- dynwrap::wrap_data(cell_ids = cell_ids) %>%
+  dynwrap::add_dimred_projection(
+    milestone_network = milestone_network,
+    dimred = dimred,
+    dimred_milestones = dimred_milestones
+  ) %>%
+  dynwrap::add_timings(checkpoints)
+
+dyncli::write_output(output, task$output)
